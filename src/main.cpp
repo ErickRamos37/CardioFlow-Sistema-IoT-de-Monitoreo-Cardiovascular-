@@ -9,11 +9,16 @@
 #include<WiFi.h>
 #include<FirebaseESP32.h>
 
+// Libreria con las constantes para conexión a WiFi y a Firebase
+#include"config/config.h"
+
 // Constantes para conexión a WiFi y a Firebase
+/*
 #define wifi  "Tu_Red_WiFi"
-#define contra "Tu_Password_Seguro" 
+#define contra "Tu_Password_Seguro"
 #define URL "TU_URL_DE_FIREBASE"
 #define secreto "Tu_Secreto"
+*/
 
 // Variables globales de para la configuración del Firebase (instancia de la clase Firebase)
 FirebaseData myFireBaseData;
@@ -43,11 +48,11 @@ byte readLED = 2;
 void setup() {
   Serial.begin(115200);
 
-  WiFi.begin(wifi, contra); // Conexión a WiFi
+  WiFi.begin(WIFI_SSID, WIFI_PASS); // Conexión a WiFi
   pinMode(readLED, OUTPUT);
 
   Serial.print("Conectando a la red: ");
-  Serial.println(wifi);
+  Serial.println(WIFI_SSID);
 
   // Estableciendo Conexión al WiFi
   while(WiFi.status() != WL_CONNECTED) {
@@ -56,9 +61,8 @@ void setup() {
   }
   Serial.println("Conexión WiFi exitosa");
   
-  // Firebase.begin(URL, secreto);
-  firebaseConfig.database_url = URL;
-  firebaseConfig.signer.tokens.legacy_token = secreto;
+  firebaseConfig.database_url = FIREBASE_URL;
+  firebaseConfig.signer.tokens.legacy_token = FIREBASE_SECRET;
   Firebase.begin(&firebaseConfig, &firebaseAuth);
   Firebase.reconnectWiFi(true);
 
@@ -73,7 +77,7 @@ void setup() {
   // while (Serial.available() == 0);
   // Serial.read();
 
-  // Configración más optima para sensor MAX30102 y el ESP32
+  // Configración más optima para sensor MAX30102 con el ESP32
   byte ledBrightness = 200;  // Alta potencia (Ajustar para la saturación)
   byte sampleAverage = 1;    // Sin promediado
   byte ledMode = 2;          // Rojo + IR
