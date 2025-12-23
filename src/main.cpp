@@ -2,13 +2,13 @@
 
 // Librerias Para el Sensor MAX30102
 #include <Wire.h>
-#include "MAX30105.h"
+// #include "MAX30105.h"
 #include "spo2_algorithm.h"
-
+/*
 // Librerias para conexión a WiFi y a Firebase (Base de Datos)
 #include<WiFi.h>
 #include<FirebaseESP32.h>
-
+*/
 // Libreria con las constantes para conexión a WiFi y a Firebase
 #include "config/config.h"
 // Libreria con la configuración y funciones para Firebase

@@ -1,6 +1,9 @@
 #ifndef FIREBASE_H
 #define FIREBASE_H
+
+// Libreria para conexión a Firebase (Base de Datos)
 #include<FirebaseESP32.h>
+// Libreria con la conección al wifi
 #include "services/wifiManager.h"
 
 // Variables globales de para la configuración del Firebase (instancia de la clase Firebase)

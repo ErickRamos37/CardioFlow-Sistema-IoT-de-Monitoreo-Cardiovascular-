@@ -1,5 +1,7 @@
 #ifndef WIFIMANAGER_H
 #define WIFIMANAGER_H
+
+// Libreria para conexión a WiFi
 #include<WiFi.h>
 
 void connectionWiFi(const char* ssid, const char* password) {

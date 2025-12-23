@@ -1,5 +1,7 @@
 #ifndef MAX30102_h
 #define MAX30102_h
+
+// Librerias Para el Sensor MAX30102
 #include <Wire.h>
 #include "MAX30105.h"
 #include "spo2_algorithm.h"
