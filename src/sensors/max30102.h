@@ -5,6 +5,7 @@
 #include <Wire.h>
 #include "MAX30105.h"
 #include "spo2_algorithm.h"
+
 // Variables globales de para la configuración del sensor MAX30102 (instancia de la clase MAX30105)
 MAX30105 particleSensor;
 
