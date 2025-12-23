@@ -10,7 +10,13 @@
 #include<FirebaseESP32.h>
 
 // Libreria con las constantes para conexión a WiFi y a Firebase
-#include"config/config.h"
+#include "config/config.h"
+// Libreria con la configuración y funciones para Firebase
+#include "services/firebase.h"
+// Libreria con la conección al wifi
+#include "services/wifiManager.h"
+// Libreria con la configuración y funciones para el sensor MAX30102
+#include "sensors/max30102.h"
 
 // Constantes para conexión a WiFi y a Firebase
 /*
@@ -21,13 +27,16 @@
 */
 
 // Variables globales de para la configuración del Firebase (instancia de la clase Firebase)
+/*
 FirebaseData myFireBaseData;
 FirebaseConfig firebaseConfig;
 FirebaseAuth firebaseAuth;
-
+*/
+/*
 // Variables globales de para la configuración del sensor MAX30102 (instancia de la clase MAX30105)
 MAX30105 particleSensor;
-
+*/
+/*
 // El Tamaño Seguro Para La Librería Es de 100 muestras
 #define BUFFER_SIZE 100
 uint32_t irBuffer[BUFFER_SIZE];
@@ -38,34 +47,42 @@ int32_t spo2;
 int8_t validSPO2;
 int32_t heartRate;
 int8_t validHeartRate;
-
+*/
 int32_t anterior_heartRate = 0;
 int8_t anterior_spo2 = 0;
 
 // Pin del LED
-byte readLED = 2;
+// byte readLED = 2;
 
 void setup() {
   Serial.begin(115200);
-
+  pinMode(readLED, OUTPUT);
+  /*
   WiFi.begin(WIFI_SSID, WIFI_PASS); // Conexión a WiFi
   pinMode(readLED, OUTPUT);
 
   Serial.print("Conectando a la red: ");
   Serial.println(WIFI_SSID);
 
-  // Estableciendo Conexión al WiFi
+  // Estableciendo conexión al WiFi
   while(WiFi.status() != WL_CONNECTED) {
     Serial.print(". ");
     delay(500);
   }
   Serial.println("Conexión WiFi exitosa");
-  
+  */
+  connectionWiFi(WIFI_SSID, WIFI_PASS);
+  // Conección a la base de datos (Firebase)
+  connectionFirebase(FIREBASE_URL, FIREBASE_SECRET);
+
+  // Configuración de la conexión a Firebase
+  /*
   firebaseConfig.database_url = FIREBASE_URL;
   firebaseConfig.signer.tokens.legacy_token = FIREBASE_SECRET;
   Firebase.begin(&firebaseConfig, &firebaseAuth);
   Firebase.reconnectWiFi(true);
-
+  */
+  /*
   // Inicializar sensor
   if (!particleSensor.begin(Wire, I2C_SPEED_FAST)) {
     Serial.println(F("MAX30105 no fue encontrado. Revise cableado/alimentación."));
@@ -86,12 +103,15 @@ void setup() {
   int adcRange = 16384;      // Máxima resolución
 
   particleSensor.setup(ledBrightness, sampleAverage, ledMode, sampleRate, pulseWidth, adcRange);
+  */
+  // Inicualizacion y configuración del sensor MAX30102
+  initializationMAX30102();
 }
 
 void loop() {
   // Bloque 1: Llenar el buffer inicial con 100 muestras
   Serial.println(F("Llenando buffer inicial..."));
-
+  /*
   for (byte i = 0; i < bufferLength; i++) {
     while (particleSensor.available() == false)
     particleSensor.check();
@@ -99,6 +119,8 @@ void loop() {
     irBuffer[i] = particleSensor.getIR();
     particleSensor.nextSample();
   }
+  */
+  prechargeBuffer();
   Serial.println("Buffer Lleno. Iniciando cálculo continuo.");
 
   // Cálculo inicial.
@@ -106,10 +128,13 @@ void loop() {
 
   // Bloque 2: Lectura continua y cálculo
   // Actualizaremos cada 0.25 segundos (50 muestras a 200 SPS).
+  /*
   const byte SAMPLES_TO_UPDATE = 50;
   const byte NEW_SAMPLES_START_INDEX = BUFFER_SIZE - SAMPLES_TO_UPDATE;  // 100 - 50 = 50
+  */
 
   while (1) {
+    /*
     // 1. Desplazar: Mover las últimas 50 muestras al inicio del array.
     for (byte i = SAMPLES_TO_UPDATE; i < BUFFER_SIZE; i++) {
       redBuffer[i - SAMPLES_TO_UPDATE] = redBuffer[i];
@@ -127,7 +152,8 @@ void loop() {
       irBuffer[i] = particleSensor.getIR();
       particleSensor.nextSample();
     }
-
+    */
+    updateSamples();
     // 3. Recalcular HR y SP02
     maxim_heart_rate_and_oxygen_saturation(irBuffer, bufferLength, redBuffer, &spo2, &validSPO2, &heartRate, &validHeartRate);
 
@@ -142,32 +168,14 @@ void loop() {
 
       // Enviar datos a la nube (Si cambio el valor)
       if(heartRate != anterior_heartRate && heartRate > 59 && heartRate < 150) {
-        // if(heartRate != anterior_heartRate) {
-        if(WiFi.status() == WL_CONNECTED) {
-            if (Firebase.setInt(myFireBaseData, "/Monitoreo/HeartRate", heartRate)) {
-              Serial.print("Ritmo Cardiaco: ");
-              Serial.println(heartRate);
-            } else {
-              Serial.print("Error de conexión: ");
-              Serial.println(myFireBaseData.errorReason());
-            }
-            anterior_heartRate = heartRate;
-            // delay(1000);
-        }
+      // if(heartRate != anterior_heartRate) {
+        sendToFirebase(PATH_HR, heartRate, "Ritmo Cardiaco");
+        anterior_heartRate = heartRate;
       }
       if(spo2 != anterior_spo2 && heartRate > 59 && heartRate < 150) {
       // if(spo2 != anterior_spo2) {
-        if(WiFi.status() == WL_CONNECTED) {
-            if (Firebase.setInt(myFireBaseData, "/Monitoreo/SPO2", spo2)) {
-              Serial.print("Oxigenación En la Sangré: ");
-              Serial.println(spo2);
-            } else {
-              Serial.print("Error de conexión: ");
-              Serial.println(myFireBaseData.errorReason());
-            }
-            anterior_spo2 = spo2;
-            // delay(1000);
-        }
+        sendToFirebase(PATH_SPO2, spo2, "Oxigenación");
+        anterior_spo2 = spo2;
       }
     } else {
       // Señal inválida
