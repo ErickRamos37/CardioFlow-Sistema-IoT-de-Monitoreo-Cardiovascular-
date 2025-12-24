@@ -23,7 +23,7 @@ void sendToFirebase(const char* path, int value, const char* label) {
   if(!isConnected()) return;
 
   if (Firebase.setInt(myFireBaseData, path, value)) {
-    Serial.println(label);          
+    Serial.print(label);          
     Serial.print(": ");
     Serial.println(value);
     } else {
